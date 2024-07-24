@@ -1,0 +1,3 @@
+export const PROVIDERS = {
+  REDIS_SERVICE: 'REDIS_SERVICE',
+};

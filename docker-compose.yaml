@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+
+  # db_master
+  db_master:
+    container_name: iam_pg_master
+    image: postgres:15.4
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: "/data"
+    ports:
+      - 5431:5432
+    volumes:
+      - ${PWD}/master/pgdata:/data
+      - ${PWD}/master/config:/config
+      - ${PWD}/master/archive:/mnt/server/archive
+    networks:
+      - postgres
+    env_file:
+      - .env
+    command: -c 'config_file=/config/postgresql.conf'
+
+  # db_slave
+  db_slave:
+    container_name: iam_pg_slave
+    image: postgres:15.4
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: "/data"
+    ports:
+      - 5433:5432
+    volumes:
+      - ${PWD}/slave/pgdata:/data
+      - ${PWD}/slave/config:/config
+      - ${PWD}/slave/archive:/mnt/server/archive
+    networks:
+      - postgres
+    env_file:
+      - .env
+    command: -c 'config_file=/config/postgresql.conf'
+
+  # pgadmin
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: iam_pgadmin
+    env_file: .env
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    depends_on:
+      - db_slave
+      - db_master
+    ports:
+      - 5050:80
+    networks:
+      - postgres
+    restart: always
+
+  # rabbitmq
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    ports:
+      # - 0.0.0.0:5675:5672
+      # - 0.0.0.0:15675:15672
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/data
+    env_file:
+      - .env
+  # redis
+  redis:
+    image: redis:latest
+    container_name: 'iam-redis'
+    ports:
+      - 6375:6379
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - redis-data:/data
+  
+  # iam
+  iam:
+    container_name: iam
+    restart: always
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    build:
+      context: .
+      dockerfile: ./Dockerfile.develop
+    ports:
+      - 4000:4000
+    networks:
+      - postgres
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  redis-data:
+networks:
+  postgres:
+    driver: bridge
