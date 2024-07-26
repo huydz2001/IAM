@@ -62,10 +62,6 @@ export class RedisService implements OnModuleInit {
   /**
    * @WHAT :For pub/sub from redis 3rd
    */
-  /**
-   * @WHAT :For pub/sub from redis 3rd
-   */
-
   private async subscribeToExternalEvents() {
     this.redisIam.on(IamMessageEvent.MESSAGE, async (eventChannel, message) => {
       const dataParsed: DataMessageQueue = JSON.parse(message);

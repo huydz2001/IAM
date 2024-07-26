@@ -34,11 +34,8 @@ export class LoggerInterceptor implements NestInterceptor {
         if (Array.isArray(ip)) {
           ip = ip.join(' ');
         }
-        const user: any = request.user || null;
         `${method} ${url} ${response.statusCode} - ${ip} +${delay}ms`;
-        this.loggerService.logVerbose(
-          `==========phone/id: ${user?.phone || 'null'}/${user?.id || null}============`,
-        );
+        this.loggerService.logVerbose(`==========TEST============`);
       }),
     );
   }
