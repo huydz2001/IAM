@@ -1,9 +1,13 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { configuration } from './config/configuration';
 import { DatabaseModule } from './database';
 import { MessageQueueModule } from './shared/module';
 import { RedisModule } from './shared/redis';
+import { UserModule } from './module/users/user.module';
+import { LoggerMiddleware, LoggerModule } from './shared/loggers';
+import helmet from 'helmet';
+import * as compression from 'compression';
 
 @Module({
   imports: [
@@ -15,8 +19,14 @@ import { RedisModule } from './shared/redis';
     DatabaseModule,
     MessageQueueModule,
     RedisModule,
+    UserModule,
+    LoggerModule,
   ],
-  controllers: [],
-  providers: [],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(helmet()).forRoutes('*');
+    consumer.apply(compression()).forRoutes('*');
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

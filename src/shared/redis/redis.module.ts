@@ -1,8 +1,8 @@
 import { Global, Module } from '@nestjs/common';
-import { RedisService } from './redis.service';
-import { PROVIDERS } from 'src/constant';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxyFactory, Transport } from '@nestjs/microservices';
+import { PROVIDERS } from 'src/constant';
+import { RedisService } from './redis.service';
 
 @Global()
 @Module({
