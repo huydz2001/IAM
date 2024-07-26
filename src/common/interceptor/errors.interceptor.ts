@@ -19,7 +19,7 @@ import { Request } from 'express';
 @Injectable()
 export class ErrorsInterceptor implements NestInterceptor {
   private logger = new Logger('HTTP');
-  private readonly loggerService: LoggersService;
+  private readonly loggerService = new LoggersService();
   intercept(
     context: ExecutionContext,
     next: CallHandler<any>,

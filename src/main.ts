@@ -45,7 +45,7 @@ async function bootstrap() {
       { deepScanRoutes: true },
     );
 
-    SwaggerModule.setup('swagger', app, document, {
+    SwaggerModule.setup('api', app, document, {
       swaggerOptions: { persistAuthorization: true },
     });
   }
