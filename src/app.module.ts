@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
-import { DatabaseModule } from './database/database.module';
 import { ConfigModule } from '@nestjs/config';
 import { configuration } from './config/configuration';
+import { DatabaseModule } from './database';
+import { MessageQueueModule } from './shared/module';
+import { RedisModule } from './shared/redis';
 
 @Module({
   imports: [
@@ -11,6 +13,8 @@ import { configuration } from './config/configuration';
       envFilePath: ['.env'],
     }),
     DatabaseModule,
+    MessageQueueModule,
+    RedisModule,
   ],
   controllers: [],
   providers: [],

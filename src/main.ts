@@ -5,12 +5,21 @@ import { HttpExceptionFilter } from './helper/http-exception.filter';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import config from './config';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import {
+  ErrorsInterceptor,
+  LoggerInterceptor,
+  ResponseInterceptor,
+} from './common/interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
-
+  app.useGlobalInterceptors(
+    new ErrorsInterceptor(),
+    new ResponseInterceptor(),
+    new LoggerInterceptor(),
+  );
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {

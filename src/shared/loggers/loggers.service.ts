@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import winston from 'winston';
+import winston, { createLogger, format, transports } from 'winston';
 import 'winston-daily-rotate-file';
 
 @Injectable()
@@ -7,15 +7,15 @@ export class LoggersService {
   private readonly logger: winston.Logger;
 
   constructor() {
-    this.logger = winston.createLogger({
-      format: winston.format.combine(
-        winston.format.timestamp({ format: 'YYYY-MM-DDTHH:mm:ss.SSS' }),
-        winston.format.printf(({ message, timestamp }) => {
+    this.logger = createLogger({
+      format: format?.combine(
+        format.timestamp({ format: 'YYYY-MM-DDTHH:mm:ss.SSS' }),
+        format.printf(({ message, timestamp }) => {
           return `${timestamp}: ${message}`;
         }),
       ),
       transports: [
-        new winston.transports.DailyRotateFile({
+        new transports.DailyRotateFile({
           filename: 'logs/iam-%DATE%.log',
           datePattern: 'YYYY-MM-DD',
           zippedArchive: true,
