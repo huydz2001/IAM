@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-
   # db_master
   db_master:
     container_name: iam_pg_master
@@ -10,39 +9,14 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      PGDATA: "/data"
     ports:
-      - 5431:5432
+      - 5432:5432
     volumes:
-      - ${PWD}/master/pgdata:/data
-      - ${PWD}/master/config:/config
-      - ${PWD}/master/archive:/mnt/server/archive
+      - ${PWD}/master/pgdata:/var/lib/postgresql/data
     networks:
       - postgres
     env_file:
       - .env
-    command: -c 'config_file=/config/postgresql.conf'
-
-  # db_slave
-  db_slave:
-    container_name: iam_pg_slave
-    image: postgres:15.4
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      PGDATA: "/data"
-    ports:
-      - 5433:5432
-    volumes:
-      - ${PWD}/slave/pgdata:/data
-      - ${PWD}/slave/config:/config
-      - ${PWD}/slave/archive:/mnt/server/archive
-    networks:
-      - postgres
-    env_file:
-      - .env
-    command: -c 'config_file=/config/postgresql.conf'
 
   # pgadmin
   pgadmin:
@@ -53,7 +27,6 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     depends_on:
-      - db_slave
       - db_master
     ports:
       - 5050:80
@@ -70,8 +43,6 @@ services:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
     ports:
-      # - 0.0.0.0:5675:5672
-      # - 0.0.0.0:15675:15672
       - 5672:5672
       - 15672:15672
     volumes:
@@ -90,20 +61,26 @@ services:
       - redis-data:/data
   
   # iam
-  iam:
-    container_name: iam
-    restart: always
-    depends_on:
-      - rabbitmq
-    links:
-      - rabbitmq
-    build:
-      context: .
-      dockerfile: ./Dockerfile.develop
-    ports:
-      - 4000:4000
-    networks:
-      - postgres
+  # iam:
+  #   container_name: iam
+  #   restart: always
+  #   depends_on:
+  #     - db_master
+  #     - rabbitmq
+  #   links:
+  #     - rabbitmq
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.develop
+  #   volumes:
+  #     - .:/usr/src/app
+  #   environment:
+  #     - PORT=4000
+  #     - NODE_ENV=development
+  #   ports:
+  #     - 4000:4000
+  #   networks:
+  #     - postgres
 
 volumes:
   postgres_data:

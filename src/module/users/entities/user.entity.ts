@@ -5,6 +5,7 @@ import {
   Entity,
   JoinColumn,
   JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToOne,
 } from 'typeorm';
@@ -46,6 +47,6 @@ export class User extends EntityAuditBase<string> {
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
   })
-  @ManyToOne(() => Role, (r) => r.users, { onDelete: 'CASCADE' })
+  @ManyToMany(() => Role, (r) => r.users, { onDelete: 'CASCADE' })
   roles: Role[];
 }

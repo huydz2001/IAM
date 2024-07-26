@@ -4,10 +4,10 @@ import { Client, ClientProxy, Transport } from '@nestjs/microservices';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import 'dotenv/config';
 import Redis from 'ioredis';
+import { PROVIDERS } from 'src/constant';
 import { IamChannel, IamMessageEvent } from 'src/constant/redis.constant';
 import { EntityManager } from 'typeorm';
 import { DataMessageQueue } from './interfaces/message-queue.interface';
-import { PROVIDERS } from 'src/constant';
 
 const { REDIS_IAM_HOST, REDIS_IAM_PORT, REDIS_IAM_PASSWORD } = process.env;
 
@@ -62,27 +62,15 @@ export class RedisService implements OnModuleInit {
   /**
    * @WHAT :For pub/sub from redis 3rd
    */
+  /**
+   * @WHAT :For pub/sub from redis 3rd
+   */
 
   private async subscribeToExternalEvents() {
     this.redisIam.on(IamMessageEvent.MESSAGE, async (eventChannel, message) => {
       const dataParsed: DataMessageQueue = JSON.parse(message);
+      console.log(dataParsed);
       switch (eventChannel) {
-        case IamChannel.PACKAGE_SERVICE:
-          if (dataParsed.event === IamMessageEvent.UPDATE_PACKAGE) {
-            await this.processTransactionUpdateUserPackage(
-              eventChannel,
-              dataParsed.event,
-              dataParsed.data,
-            );
-            return true;
-          }
-
-          this.logger.debug(
-            `[Channel: ${eventChannel}]No event handle: ${dataParsed.event}`,
-          );
-          break;
-        default:
-          break;
       }
       return;
     });
@@ -122,22 +110,5 @@ export class RedisService implements OnModuleInit {
     return await this.redisClient.ttl(key);
   }
 
-  // ===========func==============
-  async processTransactionUpdateUserPackage(
-    eventChannel: IamChannel,
-    eventMessage: IamMessageEvent,
-    payload: any,
-  ) {
-    try {
-      this.clientRabbitmq.emit('send_noti_updated_package', 'a');
-      this.logger.debug(
-        `🚀️ ~ [${eventChannel}-even:${eventMessage}] isdn:${payload?.isdn} saved log`,
-      );
-    } catch (error) {
-      console.log(
-        `[Channel: ${eventChannel}]🛑️ ~ Errors event: ${eventMessage}`,
-        error,
-      );
-    }
-  }
+  // ===========func============
 }
