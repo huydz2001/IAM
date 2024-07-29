@@ -13,6 +13,8 @@ import { DatabaseModule } from './database';
 import { LoggerMiddleware } from './shared/loggers';
 import { MessageQueueModule } from './shared/module';
 import { RedisModule } from './shared/redis';
+import { GroupModule } from './module/groups/group.module';
+import { AuthModule } from './module/auth/auth.module';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { RedisModule } from './shared/redis';
     DatabaseModule,
     MessageQueueModule,
     RedisModule,
+    GroupModule,
+    AuthModule,
   ],
   providers: [],
 })

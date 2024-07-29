@@ -16,9 +16,14 @@ export class Group extends EntityAuditBase<string> {
     joinColumn: { name: 'group_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
   })
-  @ManyToMany(() => Role, (r) => r.groups)
+  @ManyToMany(() => Role, (r) => r.groups, { nullable: true })
   roles: Role[];
 
-  @OneToMany(() => User, (u) => u.group)
-  user: User[];
+  @OneToMany(() => User, (u) => u.group, { nullable: true })
+  users: User[];
+
+  constructor(item: Partial<Group>) {
+    super();
+    Object.assign(this, item);
+  }
 }

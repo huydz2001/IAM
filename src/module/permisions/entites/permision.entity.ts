@@ -20,4 +20,9 @@ export class Permision extends EntityAuditBase<string> {
 
   @OneToMany(() => Action, (r) => r.permission)
   actions: Action;
+
+  constructor(item: Partial<Permision>) {
+    super();
+    Object.assign(this, item);
+  }
 }

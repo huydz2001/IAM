@@ -22,4 +22,9 @@ export class Profile extends EntityAuditBase<string> {
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   @OneToOne(() => User, (u) => u.profile, { onDelete: 'CASCADE' })
   user: User;
+
+  constructor(item: Partial<Profile>) {
+    super();
+    Object.assign(this, item);
+  }
 }
