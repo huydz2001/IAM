@@ -1,3 +1,7 @@
 export const RoutingKey = {
-  TEST: 'TEST',
+  USER: {
+    GET_USER: 'GWT_USER',
+    UPDATE_USER: 'UPDATE_USER',
+    CREATE_USER: 'CREATE_USER',
+  },
 };

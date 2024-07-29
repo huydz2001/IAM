@@ -1,10 +1,15 @@
+import { ExpressAdapter } from '@bull-board/express';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { BullModule } from '@nestjs/bull';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import * as compression from 'compression';
 import helmet from 'helmet';
+import config from './config';
 import { configuration } from './config/configuration';
 import { DatabaseModule } from './database';
-import { UserModule } from './module/users/user.module';
 import { LoggerMiddleware } from './shared/loggers';
 import { MessageQueueModule } from './shared/module';
 import { RedisModule } from './shared/redis';
@@ -16,11 +21,19 @@ import { RedisModule } from './shared/redis';
       load: [configuration],
       envFilePath: ['.env'],
     }),
+    BullModule.forRoot({
+      redis: {
+        host: config.redis.host,
+        port: Number(config.redis.port),
+        password: config.redis.password,
+      },
+    }),
+    BullBoardModule.forRoot({ route: '/queues', adapter: ExpressAdapter }),
+    EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     MessageQueueModule,
     RedisModule,
-    UserModule,
-    // LoggerModule,
   ],
   providers: [],
 })
