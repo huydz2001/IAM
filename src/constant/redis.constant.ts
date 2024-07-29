@@ -1,5 +1,5 @@
 export enum IamChannel {
-  TEST_SERVICE = 'PACKAGE-SERVICE',
+  TEST_SERVICE = 'TEST-SERVICE',
 }
 
 export enum IamMessageEvent {

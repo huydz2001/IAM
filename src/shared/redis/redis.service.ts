@@ -5,11 +5,9 @@ import { InjectEntityManager } from '@nestjs/typeorm';
 import 'dotenv/config';
 import Redis from 'ioredis';
 import { PROVIDERS } from 'src/constant';
-import { IamChannel, IamMessageEvent } from 'src/constant/redis.constant';
 import { EntityManager } from 'typeorm';
-import { DataMessageQueue } from './interfaces/message-queue.interface';
 
-const { REDIS_IAM_HOST, REDIS_IAM_PORT, REDIS_IAM_PASSWORD } = process.env;
+const { REDIS_HOST, REDIS_PORT, REDIS_PASSWORD } = process.env;
 
 @Injectable()
 export class RedisService implements OnModuleInit {
@@ -18,15 +16,14 @@ export class RedisService implements OnModuleInit {
   @Client({
     transport: Transport.REDIS,
     options: {
-      host: REDIS_IAM_HOST,
-      port: Number(REDIS_IAM_PORT) || 6363,
-      password: REDIS_IAM_PASSWORD,
+      host: REDIS_HOST,
+      port: Number(REDIS_PORT) || 6363,
+      password: REDIS_PASSWORD,
     },
   })
   private readonly client: ClientProxy;
 
   private readonly redisClient: Redis;
-  private readonly redisIam: Redis;
 
   constructor(
     private readonly configService: ConfigService,
@@ -40,40 +37,19 @@ export class RedisService implements OnModuleInit {
       port: Number(configService.get('redis.port')),
       password: configService.get('redis.password'),
     });
-
-    this.redisIam = new Redis({
-      host: configService.get('iamRedis.host'),
-      port: +configService.get('iamRedis.port'),
-      password: configService.get('iamRedis.password'),
-    });
   }
 
   async onModuleInit() {
     try {
       await this.client.connect();
-      await this.redisIam.subscribe(...Object.values(IamChannel));
-      await this.subscribeToExternalEvents();
       console.log('🚀️ ~ Connected Iam redis');
     } catch (error) {
       console.log('🛑️ ~ Errors [init connect Iam redis]', error);
     }
   }
 
-  /**
-   * @WHAT :For pub/sub from redis 3rd
-   */
-  private async subscribeToExternalEvents() {
-    this.redisIam.on(IamMessageEvent.MESSAGE, async (eventChannel, message) => {
-      const dataParsed: DataMessageQueue = JSON.parse(message);
-      console.log(dataParsed);
-      switch (eventChannel) {
-      }
-      return;
-    });
-  }
-
-  getRedisIam() {
-    return this.redisIam;
+  getRedisClient() {
+    return this.redisClient;
   }
 
   // ===================================

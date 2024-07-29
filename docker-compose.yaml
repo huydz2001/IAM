@@ -12,7 +12,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ${PWD}/master/pgdata:/var/lib/postgresql/data
+      - ${PWD}/db/master/pgdata:/var/lib/postgresql/data
     networks:
       - postgres
     env_file:
@@ -46,7 +46,7 @@ services:
       - 5672:5672
       - 15672:15672
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq/data
+      - ${PWD}/rabbitmq:/data
     env_file:
       - .env
   # redis
@@ -54,33 +54,33 @@ services:
     image: redis:latest
     container_name: 'iam-redis'
     ports:
-      - 6375:6379
+      - 6379:6379
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     volumes:
-      - redis-data:/data
+      - ${PWD}/redis:/data
   
   # iam
-  # iam:
-  #   container_name: iam
-  #   restart: always
-  #   depends_on:
-  #     - db_master
-  #     - rabbitmq
-  #   links:
-  #     - rabbitmq
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.develop
-  #   volumes:
-  #     - .:/usr/src/app
-  #   environment:
-  #     - PORT=4000
-  #     - NODE_ENV=development
-  #   ports:
-  #     - 4000:4000
-  #   networks:
-  #     - postgres
+  iam:
+    container_name: iam
+    restart: always
+    depends_on:
+      - db_master
+      - rabbitmq
+    links:
+      - rabbitmq
+    build:
+      context: .
+      dockerfile: Dockerfile.develop
+    volumes:
+      - .:/usr/src/app
+    environment:
+      - PORT=4000
+      - NODE_ENV=development
+    ports:
+      - 4000:4000
+    networks:
+      - postgres
 
 volumes:
   postgres_data:
