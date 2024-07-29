@@ -13,4 +13,9 @@ export class Resource extends EntityAuditBase<string> {
     referencedColumnName: 'id',
   })
   permission: Permision;
+
+  constructor(item: Partial<Resource>) {
+    super();
+    Object.assign(this, item);
+  }
 }

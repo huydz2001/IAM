@@ -22,6 +22,6 @@ export abstract class EntityAuditBase<T extends string>
   @Column()
   isDeleted: boolean;
 
-  @Column()
-  deleted_at: Date;
+  @Column({ default: null })
+  deleted_by: string;
 }

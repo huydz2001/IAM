@@ -28,4 +28,9 @@ export class Role extends EntityAuditBase<string> {
 
   @ManyToMany(() => User, (u) => u.roles)
   users: User;
+
+  constructor(item: Partial<Role>) {
+    super();
+    Object.assign(this, item);
+  }
 }

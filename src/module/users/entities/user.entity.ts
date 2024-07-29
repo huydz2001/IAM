@@ -12,7 +12,7 @@ import {
 import { Profile } from './profile.entity';
 import { Role } from 'src/module/roles';
 
-@Entity()
+@Entity({ name: 'users' })
 export class User extends EntityAuditBase<string> {
   @Column()
   email: string;
@@ -29,7 +29,7 @@ export class User extends EntityAuditBase<string> {
   @Column({ default: false })
   is_verify_email: boolean;
 
-  @Column()
+  @Column({ nullable: true })
   ip_address: string;
 
   @OneToOne(() => Profile, (p) => p.user)
@@ -39,7 +39,10 @@ export class User extends EntityAuditBase<string> {
     name: 'group_id',
     referencedColumnName: 'id',
   })
-  @ManyToOne(() => Group, (g) => g.user, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Group, (g) => g.users, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
   group: Group;
 
   @JoinTable({
@@ -47,6 +50,14 @@ export class User extends EntityAuditBase<string> {
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
   })
-  @ManyToMany(() => Role, (r) => r.users, { onDelete: 'CASCADE' })
+  @ManyToMany(() => Role, (r) => r.users, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
   roles: Role[];
+
+  constructor(item: Partial<User>) {
+    super();
+    Object.assign(this, item);
+  }
 }
