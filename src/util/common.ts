@@ -1,17 +1,23 @@
 import * as crypto from 'crypto';
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import { delay } from 'lodash';
-import ms from 'ms';
-const { JWT_KEY_EXPIRED } = process.env;
+import * as ms from 'ms';
+const { JWT_KEY_EXPIRED, JWT_KEY_REFRESH_EXPIRED } = process.env;
 
 export const randomQueueName = (): string => {
-  return `cms-be.${crypto.randomBytes(10).toString('hex')}`;
+  return `iam.${crypto.randomBytes(10).toString('hex')}`;
 };
 
 export function getDurationExpired(exp: number): number {
   return exp
     ? exp - Math.floor(Date.now() / 1000)
-    : Math.floor(ms(JWT_KEY_EXPIRED) / 1000);
+    : Math.floor(Number(ms(JWT_KEY_EXPIRED)) / 1000);
+}
+
+export function getDurationExpiredRT(exp: number): number {
+  return exp
+    ? exp - Math.floor(Date.now() / 1000)
+    : Math.floor(Number(ms(JWT_KEY_REFRESH_EXPIRED)) / 1000);
 }
 
 export const decodeJwtToken = (token: string): any => {
@@ -43,3 +49,21 @@ export const promiseDelay = (ms: number) => {
     }, ms),
   );
 };
+
+export function getRealIp(request: Request, ip?: string) {
+  const forwardedFor = request.headers['x-forwarded-for'];
+  let clientIp: string = forwardedFor
+    ? (forwardedFor as string).split(',')[0].trim()
+    : ip;
+  const regex = /::ffff:(\d+\.\d+\.\d+\.\d+)/;
+  const match = clientIp.match(regex);
+  if (match) {
+    clientIp = match[1];
+  } else if (ip === '::1') {
+    clientIp = '127.0.0.1';
+  } else {
+    clientIp = ip;
+  }
+
+  return clientIp;
+}

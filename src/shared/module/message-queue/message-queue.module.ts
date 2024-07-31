@@ -1,6 +1,7 @@
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { Global, Module } from '@nestjs/common';
 import config from 'src/config';
+import { TestService } from './services/test.service';
 
 @Global()
 @Module({
@@ -17,7 +18,7 @@ import config from 'src/config';
       connectionInitOptions: { wait: false },
     }),
   ],
-  providers: [],
-  exports: [],
+  providers: [TestService],
+  exports: [TestService],
 })
 export class MessageQueueModule {}

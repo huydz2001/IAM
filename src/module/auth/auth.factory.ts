@@ -20,6 +20,7 @@ export class AuthFactory {
       ip_address: null,
       group: null,
       roles: null,
+      loginToken: null,
       modified_at: null,
       isDeleted: null,
       created_by: null,
@@ -27,7 +28,7 @@ export class AuthFactory {
     };
   }
 
-  private hashPassword(password: string) {
+  hashPassword(password: string) {
     return crypto.createHmac('sha256', password).digest('hex');
   }
 }

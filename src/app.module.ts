@@ -2,19 +2,21 @@ import { ExpressAdapter } from '@bull-board/express';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullModule } from '@nestjs/bull';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { JwtModule } from '@nestjs/jwt';
 import { ScheduleModule } from '@nestjs/schedule';
 import * as compression from 'compression';
 import helmet from 'helmet';
 import config from './config';
 import { configuration } from './config/configuration';
 import { DatabaseModule } from './database';
+import { AuthModule } from './module/auth/auth.module';
+import { GroupModule } from './module/groups/group.module';
+import { UserModule } from './module/users/user.module';
 import { LoggerMiddleware } from './shared/loggers';
 import { MessageQueueModule } from './shared/module';
 import { RedisModule } from './shared/redis';
-import { GroupModule } from './module/groups/group.module';
-import { AuthModule } from './module/auth/auth.module';
 
 @Module({
   imports: [
@@ -22,6 +24,15 @@ import { AuthModule } from './module/auth/auth.module';
       isGlobal: true,
       load: [configuration],
       envFilePath: ['.env'],
+    }),
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('jwt.key'),
+        signOptions: {
+          expiresIn: configService.get('jwt.KeyExpired'),
+        },
+      }),
     }),
     BullModule.forRoot({
       redis: {
@@ -38,8 +49,10 @@ import { AuthModule } from './module/auth/auth.module';
     RedisModule,
     GroupModule,
     AuthModule,
+    UserModule,
   ],
   providers: [],
+  exports: [],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
