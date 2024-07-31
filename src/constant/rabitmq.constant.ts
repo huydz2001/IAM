@@ -4,4 +4,10 @@ export const RoutingKey = {
     UPDATE_USER: 'UPDATE_USER',
     CREATE_USER: 'CREATE_USER',
   },
+  AUTH: {
+    LOGIN: 'LOGIN',
+    LOGIN_GUEST: 'LOGIN_GUEST',
+    LOGOUT: 'LOGOUT',
+    REGISTER: 'REGISTER',
+  },
 };

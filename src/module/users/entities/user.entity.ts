@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { Profile } from './profile.entity';
 import { Role } from 'src/module/roles';
+import { LoginToken } from './login-token.entity';
 
 @Entity({ name: 'users' })
 export class User extends EntityAuditBase<string> {
@@ -55,6 +56,16 @@ export class User extends EntityAuditBase<string> {
     nullable: true,
   })
   roles: Role[];
+
+  @JoinColumn({
+    name: 'login_token_id',
+    referencedColumnName: 'id',
+  })
+  @OneToOne(() => LoginToken, (t) => t.user, {
+    onDelete: 'CASCADE',
+    cascade: true,
+  })
+  loginToken: LoginToken;
 
   constructor(item: Partial<User>) {
     super();

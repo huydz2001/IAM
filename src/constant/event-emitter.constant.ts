@@ -1,0 +1,7 @@
+export const EVENT_AUTH = {
+  SAVE_TOKEN_LOGIN: 'SAVE_TOKEN_LOGIN',
+};
+
+export const EVENT_REDIS = {
+  SAVE_TOKEN_LOGIN: 'SAVE_TOKEN_LOGIN',
+};
