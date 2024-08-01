@@ -1,10 +1,10 @@
+import { Role } from 'src/module/roles';
 import { EntityAuditBase } from 'src/util/db';
 import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
-import { Resource } from './resource.entity';
 import { Action } from './action.entity';
-import { Role } from 'src/module/roles';
+import { Resource } from './resource.entity';
 
-@Entity()
+@Entity({ name: 'permisions' })
 export class Permision extends EntityAuditBase<string> {
   @Column({ type: 'int' })
   effect: number;

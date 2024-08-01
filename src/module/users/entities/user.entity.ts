@@ -3,6 +3,7 @@ import { EntityAuditBase } from 'src/util/db';
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   JoinTable,
   ManyToMany,
@@ -14,6 +15,8 @@ import { Role } from 'src/module/roles';
 import { LoginToken } from './login-token.entity';
 
 @Entity({ name: 'users' })
+@Index('idx_user_email', ['email'], { unique: true })
+@Index('idx_user_phone', ['phone'], { unique: true })
 export class User extends EntityAuditBase<string> {
   @Column()
   email: string;
@@ -21,7 +24,7 @@ export class User extends EntityAuditBase<string> {
   @Column()
   phone: string;
 
-  @Column()
+  @Column({ select: false })
   hash_pass: string;
 
   @Column({ default: true })

@@ -3,17 +3,19 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { ID_ADMIN } from 'src/constant';
 import { ConfigData } from 'src/shared/base';
 import { RedisService } from 'src/shared/redis';
-import { EntityManager, Repository } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
-import { Profile } from './entities/profile.entity';
-import { User } from './entities/user.entity';
-import { TokenLoginDto } from './dtos';
-import { LoginToken } from './entities/login-token.entity';
 import {
   decodeJwtToken,
   getDurationExpired,
   getDurationExpiredRT,
 } from 'src/util/common';
+import { EntityManager, Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
+import { TokenLoginDto } from './dtos';
+import { LoginToken } from './entities/login-token.entity';
+import { Profile } from './entities/profile.entity';
+import { User } from './entities/user.entity';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
@@ -25,7 +27,8 @@ export class UserService {
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     @InjectRepository(LoginToken)
     private readonly loginTokenRepo: Repository<LoginToken>,
-
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
     private readonly configData: ConfigData,
     private readonly redisService: RedisService,
   ) {
@@ -42,8 +45,15 @@ export class UserService {
     return await this.userRepo.findOne({ where: { email: email } });
   }
 
+  async findUserById(id: string) {
+    return await this.userRepo.findOne({ where: { id } });
+  }
+
   async findUserByPhone(phone: string) {
-    return await this.userRepo.findOne({ where: { phone: phone } });
+    return await this.userRepo.findOne({
+      where: { phone: phone },
+      select: ['id', 'hash_pass'],
+    });
   }
 
   async saveUserRegister(
@@ -84,17 +94,19 @@ export class UserService {
   }
 
   async saveTokenLogin(payload: TokenLoginDto) {
-    const { accessToken, refreshToken, user, ipAdress } = payload;
+    const { accessToken, refreshToken, userId, ipAdress } = payload;
+    console.log(ipAdress);
+    const user = await this.userRepo.findOne({ where: { id: userId } });
     try {
       return await this.loginTokenRepo.upsert(
         {
           id: uuidv4(),
-          accessToken: accessToken,
-          refreshToken: refreshToken,
+          access_token: accessToken,
+          refresh_token: refreshToken,
           ip_adress: ipAdress,
           user: user,
           created_at: new Date(),
-          updated_at: new Date(),
+          modified_at: new Date(),
         },
         ['user_id'],
       );
@@ -104,23 +116,36 @@ export class UserService {
     }
   }
 
+  async updateLoginToken(entity: LoginToken, transaction?: EntityManager) {
+    entity.modified_at = new Date();
+    if (transaction) return transaction.getRepository(LoginToken).save(entity);
+
+    return this.loginTokenRepo.save(entity);
+  }
+
   async saveTokenLoginRedis(payload: TokenLoginDto) {
-    const { accessToken, user, refreshToken } = payload;
+    const { accessToken, userId, refreshToken } = payload;
     const decodeToken = decodeJwtToken(accessToken);
-    const decodeRefreshToken = decodeJwtToken(refreshToken);
+    const decodeRefreshToken = this.jwtService.verify(refreshToken, {
+      secret: this.configService.get<string>('JWT_KEY_REFRESH'),
+    });
     const expiredTimeAT = getDurationExpired(decodeToken?.exp);
     const expiredTimeRT = getDurationExpiredRT(decodeRefreshToken?.exp);
 
     await this.redisService.setValue(
-      `accessToken:${user.id}`,
+      `accessToken:${userId}`,
       accessToken,
       expiredTimeAT,
     );
 
     await this.redisService.setValue(
-      `refreshToken:${user.id}`,
+      `refreshToken:${userId}`,
       accessToken,
       expiredTimeRT,
     );
+  }
+
+  async getUserLoginToken(userId: string) {
+    return await this.loginTokenRepo.findOne({ where: { user_id: userId } });
   }
 }

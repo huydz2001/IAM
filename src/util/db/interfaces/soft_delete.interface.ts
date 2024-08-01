@@ -1,3 +1,3 @@
 export interface ISoftDelete {
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

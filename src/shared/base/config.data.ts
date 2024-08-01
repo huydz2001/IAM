@@ -9,7 +9,7 @@ export class ConfigData {
     entity.deleted_by = null;
     entity.created_by = userId;
     entity.updated_by = userId;
-    entity.isDeleted = false;
+    entity.is_deleted = false;
     return entity;
   }
 
@@ -20,7 +20,7 @@ export class ConfigData {
   }
 
   deleteData<T extends EntityAuditBase<string>>(entity: T, userId: string) {
-    entity.isDeleted = true;
+    entity.is_deleted = true;
     entity.deleted_by = userId;
     entity.modified_at = new Date();
     return entity;

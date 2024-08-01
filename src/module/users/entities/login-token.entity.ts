@@ -1,17 +1,20 @@
 import { EntityBase } from 'src/util/db/asbtract/entity_base.abstract';
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
 import { User } from './user.entity';
 
 @Entity({ name: 'login_tokens' })
+@Index('idx_loginToken_uId', ['user_id'], { unique: true })
+@Index('idx_loginToken_accessToken', ['access_token'])
+@Index('idx_loginToken_refreshToken', ['refresh_token'])
 export class LoginToken extends EntityBase<string> {
   @Column({ unique: true })
   user_id: string;
 
   @Column()
-  accessToken: string;
+  access_token: string;
 
   @Column()
-  refreshToken: string;
+  refresh_token: string;
 
   @Column()
   ip_adress: string;
@@ -20,7 +23,7 @@ export class LoginToken extends EntityBase<string> {
   created_at: Date;
 
   @Column()
-  updated_at: Date;
+  modified_at: Date;
 
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   @OneToOne(() => User, (u) => u.loginToken)

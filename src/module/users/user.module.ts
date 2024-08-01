@@ -6,11 +6,12 @@ import { LoginToken } from './entities/login-token.entity';
 import { Profile } from './entities/profile.entity';
 import { ConfigData } from 'src/shared/base';
 import { UserController } from './user.controller';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, LoginToken, Profile])],
+  imports: [TypeOrmModule.forFeature([User, LoginToken, Profile]), JwtModule],
   exports: [UserService],
-  providers: [UserService, ConfigData],
+  providers: [UserService, ConfigData, JwtService],
   controllers: [UserController],
 })
 export class UserModule {}

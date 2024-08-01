@@ -20,7 +20,7 @@ export abstract class EntityAuditBase<T extends string>
   updated_by: string;
 
   @Column()
-  isDeleted: boolean;
+  is_deleted: boolean;
 
   @Column({ default: null })
   deleted_by: string;

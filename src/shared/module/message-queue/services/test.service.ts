@@ -23,12 +23,31 @@ export class TestService {
     }
   }
 
-  async login(payload: any) {
+  async loginClient(payload: any) {
     try {
       return this.amqpConnection.request<any>({
         exchange: config.rabbitmq.exchange,
         routingKey: RoutingKey.AUTH.LOGIN,
         payload: payload,
+        timeout: 10000,
+      });
+    } catch (err) {
+      this.logger.error(err?.message);
+      throw err;
+    }
+  }
+
+  async refreshTokenClient(payload: any, ipAdress: string) {
+    try {
+      const { accessToken, refreshToken } = payload;
+      return this.amqpConnection.request<any>({
+        exchange: config.rabbitmq.exchange,
+        routingKey: RoutingKey.AUTH.REFRESH_TOKEN,
+        payload: {
+          ipAdress,
+          accessToken,
+          refreshToken,
+        },
         timeout: 10000,
       });
     } catch (err) {

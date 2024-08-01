@@ -2,11 +2,12 @@ import { Group } from 'src/module/groups';
 import { Permision } from 'src/module/permisions';
 import { User } from 'src/module/users';
 import { EntityAuditBase } from 'src/util/db';
-import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
+import { Column, Entity, Index, JoinTable, ManyToMany } from 'typeorm';
 
 @Entity({ name: 'roles' })
+@Index('idx_role_roleName', ['role_name'], { unique: true })
 export class Role extends EntityAuditBase<string> {
-  @Column()
+  @Column({ unique: true })
   role_name: string;
 
   @Column()

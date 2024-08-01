@@ -22,7 +22,7 @@ export class AuthFactory {
       roles: null,
       loginToken: null,
       modified_at: null,
-      isDeleted: null,
+      is_deleted: null,
       created_by: null,
       deleted_by: null,
     };
