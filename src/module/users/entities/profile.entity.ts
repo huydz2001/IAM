@@ -1,8 +1,9 @@
 import { EntityAuditBase } from 'src/util/db';
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
 import { User } from './user.entity';
 
-@Entity()
+@Entity({ name: 'profiles' })
+@Index('idx_profile_userName', ['user_name'], { unique: true })
 export class Profile extends EntityAuditBase<string> {
   @Column({ nullable: true })
   user_name: string;

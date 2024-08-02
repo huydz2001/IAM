@@ -55,6 +55,7 @@ services:
   redis:
     image: redis:latest
     container_name: 'iam-redis'
+    restart: always
     ports:
       - 6379:6379
     environment:
@@ -65,24 +66,24 @@ services:
       - ${PWD}/redis:/data
   
   # iam
-  iam:
-    container_name: iam
-    restart: always
-    depends_on:
-      - db_master
-      - rabbitmq
-    build:
-      context: .
-      dockerfile: Dockerfile.develop
-    volumes:
-      - .:/usr/src/app
-    environment:
-      - PORT=4000
-      - NODE_ENV=development
-    ports:
-      - 4000:4000
-    networks:
-      - iam
+  # iam:
+  #   container_name: iam
+  #   restart: always
+  #   depends_on:
+  #     - db_master
+  #     - rabbitmq
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.develop
+  #   volumes:
+  #     - .:/usr/src/app
+  #   environment:
+  #     - PORT=4000
+  #     - NODE_ENV=development
+  #   ports:
+  #     - 4000:4000
+  #   networks:
+  #     - iam
 
 volumes:
   postgres_data:

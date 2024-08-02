@@ -9,5 +9,6 @@ export const RoutingKey = {
     LOGIN_GUEST: 'LOGIN_GUEST',
     LOGOUT: 'LOGOUT',
     REGISTER: 'REGISTER',
+    REFRESH_TOKEN: 'REFRESH_TOKEN',
   },
 };

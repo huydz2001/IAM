@@ -1,5 +1,10 @@
 import { RabbitRPC } from '@golevelup/nestjs-rabbitmq';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
@@ -10,12 +15,13 @@ import { EVENT_AUTH, EVENT_REDIS } from 'src/constant/event-emitter.constant';
 import { ConfigData } from 'src/shared/base';
 import { TestService } from 'src/shared/module';
 import { RedisService } from 'src/shared/redis';
-import { randomQueueName } from 'src/util/common';
+import { decodeJwtToken, randomQueueName } from 'src/util/common';
 import { User } from '../users';
 import { TokenLoginDto } from '../users/dtos';
 import { UserService } from '../users/user.service';
 import { AuthFactory } from './auth.factory';
 import { LoginDto, LoginGuestDto } from './dtos/login.dto';
+import { RefreshTokenDto } from './dtos/token-refresh.dto';
 import { UserRegisterDto } from './dtos/user-register.dto';
 
 @Injectable()
@@ -68,7 +74,7 @@ export class AuthService {
   async registerClient(payload: UserRegisterDto) {
     try {
       const resp = await this.testService.loginGuestClient(payload);
-      if (resp?.data.messageResp) {
+      if (resp?.data?.messageResp) {
         throw new BadRequestException(resp.data.messageResp);
       }
       return resp?.data ?? null;
@@ -81,7 +87,7 @@ export class AuthService {
   async loginGuestClient(payload: LoginGuestDto) {
     try {
       const resp = await this.testService.loginGuestClient(payload);
-      if (resp?.data.messageResp) {
+      if (resp?.data?.messageResp) {
         throw new BadRequestException(resp.data.messageResp);
       }
       return resp.data ?? null;
@@ -93,8 +99,21 @@ export class AuthService {
 
   async loginClient(payload: LoginDto) {
     try {
-      const resp = await this.testService.login(payload);
-      if (resp?.data.messageResp) {
+      const resp = await this.testService.loginClient(payload);
+      if (resp?.data?.messageResp) {
+        throw new BadRequestException(resp.data.messageResp);
+      }
+      return resp.data ?? null;
+    } catch (error) {
+      this.logger.error(error.message);
+      throw error;
+    }
+  }
+
+  async refreshTokenClient(payload: RefreshTokenDto, ipAdress: string) {
+    try {
+      const resp = await this.testService.refreshTokenClient(payload, ipAdress);
+      if (resp?.data?.messageResp) {
         throw new BadRequestException(resp.data.messageResp);
       }
       return resp.data ?? null;
@@ -113,24 +132,29 @@ export class AuthService {
   private async login(payload: LoginDto) {
     const { phone, password, ipAdress } = payload;
 
-    const user = await this.userService.findUserByPhone(phone);
-    if (!user || user.hash_pass !== this.authFactory.hashPassword(password)) {
+    try {
+      const user = await this.userService.findUserByPhone(phone);
+      if (!user || user.hash_pass !== this.authFactory.hashPassword(password)) {
+        throw new BadRequestException('Wrong phone or password!');
+      }
+
+      const token = this.generateToken(user);
+      const payloadSaveToken: TokenLoginDto = {
+        accessToken: token.accessToken,
+        refreshToken: token.refreshToken,
+        userId: user.id,
+        ipAdress: ipAdress,
+      };
+
+      this.evenEmitter.emit(EVENT_AUTH.SAVE_TOKEN_LOGIN, payloadSaveToken);
+      this.evenEmitter.emit(EVENT_REDIS.SAVE_TOKEN_LOGIN, payloadSaveToken);
+      return token;
+    } catch (err) {
+      this.logger.error(err.message);
       return {
-        messageResp: 'Wrong phone or password!',
+        messageResp: err.message,
       };
     }
-
-    const token = this.generateToken(user);
-    const payloadSaveToken: TokenLoginDto = {
-      accessToken: token.accessToken,
-      refreshToken: token.refreshToken,
-      user: user,
-      ipAdress: ipAdress,
-    };
-
-    this.evenEmitter.emit(EVENT_AUTH.SAVE_TOKEN_LOGIN, payloadSaveToken);
-    this.evenEmitter.emit(EVENT_REDIS.SAVE_TOKEN_LOGIN, payloadSaveToken);
-    return token;
   }
 
   @RabbitRPC({
@@ -143,7 +167,86 @@ export class AuthService {
     this.logger.debug(payload);
   }
 
+  @RabbitRPC({
+    exchange: config.rabbitmq.exchange,
+    queue: randomQueueName(),
+    routingKey: RoutingKey.AUTH.REFRESH_TOKEN,
+    queueOptions: { autoDelete: true },
+  })
+  private async refreshToken(payload: any) {
+    const { accessToken, refreshToken, ipAddress } = payload;
+    try {
+      const decodeToken = decodeJwtToken(accessToken);
+      const decodeRefreshToken = this.jwtService.verify(refreshToken, {
+        secret: this.configService.get<string>('JWT_KEY_REFRESH'),
+      });
+
+      if (!decodeToken || !decodeRefreshToken) {
+        throw new UnauthorizedException();
+      }
+
+      const userId = decodeToken?.id;
+      const userLoginToken = await this.userService.getUserLoginToken(userId);
+
+      if (userLoginToken.ip_adress !== ipAddress) {
+        // TODO
+        // Send OTP confirm
+      }
+
+      if (userId !== decodeRefreshToken.id || !userLoginToken) {
+        throw new UnauthorizedException();
+      }
+
+      if (
+        userLoginToken.access_token !== accessToken ||
+        userLoginToken.refresh_token !== refreshToken
+      ) {
+        throw new UnauthorizedException();
+      }
+
+      const jwt = this.configService.get('jwt');
+      const newToken = this.jwtService.sign(
+        { id: userId },
+        {
+          secret: jwt.key,
+          expiresIn: jwt.keyExpired,
+        },
+      );
+      const newRefreshToken = this.jwtService.sign(
+        { id: userId },
+        {
+          secret: jwt.keyRefresh,
+          expiresIn: jwt.keyRefreshExpired,
+        },
+      );
+
+      userLoginToken.access_token = newToken;
+      userLoginToken.refresh_token = newRefreshToken;
+      await this.userService.updateLoginToken(userLoginToken);
+
+      const payloadSaveToken: TokenLoginDto = {
+        accessToken: newToken,
+        refreshToken: newRefreshToken,
+        userId: userId,
+        ipAdress: ipAddress,
+      };
+
+      this.evenEmitter.emit(EVENT_REDIS.SAVE_TOKEN_LOGIN, payloadSaveToken);
+
+      return {
+        accessToken: newToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch (err) {
+      this.logger.error(err.message);
+      return {
+        messageResp: err.message,
+      };
+    }
+  }
+
   private generateToken(user: User) {
+    console.log(user);
     const jwt = this.configService.get('jwt');
     const payloadJwt = {
       id: user.id,
