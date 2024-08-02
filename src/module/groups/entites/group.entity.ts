@@ -1,4 +1,4 @@
-import { Role } from 'src/module/roles';
+import { Modules } from 'src/module/menu/entity/module.entity';
 import { User } from 'src/module/users';
 import { EntityAuditBase } from 'src/util/db';
 import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
@@ -11,13 +11,13 @@ export class Group extends EntityAuditBase<string> {
   @Column({ nullable: true })
   des: string;
 
+  @ManyToMany(() => Modules, (m) => m.groups)
   @JoinTable({
-    name: 'groups_roles',
+    name: 'groups_modules',
     joinColumn: { name: 'group_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'module_id', referencedColumnName: 'id' },
   })
-  @ManyToMany(() => Role, (r) => r.groups, { nullable: true })
-  roles: Role[];
+  modules: Modules[];
 
   @OneToMany(() => User, (u) => u.group, { nullable: true })
   users: User[];

@@ -19,7 +19,6 @@ export class AuthFactory {
       is_verify_email: false,
       ip_address: null,
       group: null,
-      roles: null,
       loginToken: null,
       modified_at: null,
       is_deleted: null,

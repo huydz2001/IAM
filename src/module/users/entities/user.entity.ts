@@ -5,14 +5,11 @@ import {
   Entity,
   Index,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
   ManyToOne,
   OneToOne,
 } from 'typeorm';
-import { Profile } from './profile.entity';
-import { Role } from 'src/module/roles';
 import { LoginToken } from './login-token.entity';
+import { Profile } from './profile.entity';
 
 @Entity({ name: 'users' })
 @Index('idx_user_email', ['email'], { unique: true })
@@ -48,17 +45,6 @@ export class User extends EntityAuditBase<string> {
     nullable: true,
   })
   group: Group;
-
-  @JoinTable({
-    name: 'users_roles',
-    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
-  })
-  @ManyToMany(() => Role, (r) => r.users, {
-    onDelete: 'CASCADE',
-    nullable: true,
-  })
-  roles: Role[];
 
   @JoinColumn({
     name: 'login_token_id',

@@ -31,7 +31,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
     const bearerToken = req.headers['authorization']?.split(' ')?.[1];
     const tokenUser = await this.redisService.getValue(`access_token:${id}`);
-    // const refreshUser = await this.redisService.getValue(`refresh_token:${id}`);
 
     if (!bearerToken || bearerToken !== tokenUser) {
       await this.redisService.delValue(`access_token:${id}`);

@@ -17,6 +17,8 @@ import { UserModule } from './module/users/user.module';
 import { LoggerMiddleware } from './shared/loggers';
 import { MessageQueueModule } from './shared/module';
 import { RedisModule } from './shared/redis';
+import { MenuModule } from './module/menu/menu.module';
+import { PermisionModule } from './module/permisions/permision.module';
 
 @Module({
   imports: [
@@ -50,6 +52,8 @@ import { RedisModule } from './shared/redis';
     GroupModule,
     AuthModule,
     UserModule,
+    MenuModule,
+    PermisionModule,
   ],
   providers: [],
   exports: [],
